@@ -4,7 +4,11 @@ Creates a "Ride On Clicker" shortcut on your Desktop.
 Double-click it to start (opens a Terminal window). Close the terminal to stop.
 
 Usage:
-    python3 create_desktop_app.py
+    Put these 3 files in the same folder:
+      - create_desktop_app.py (this file)
+      - zwift_rideon_clicker.py
+      - rideon_template.png
+    Then run: python3 create_desktop_app.py
 """
 
 import shutil
@@ -14,28 +18,38 @@ from pathlib import Path
 PYTHON = shutil.which("python3") or "/usr/bin/python3"
 INSTALL_DIR = Path.home() / ".zwift-rideon"
 SCRIPT = "zwift_rideon_clicker.py"
+TEMPLATE = "rideon_template.png"
 APP_NAME = "Ride On Clicker"
 DESKTOP = Path.home() / "Desktop"
 
 
 def create_command_file():
-    """Create a .command file — macOS opens these in Terminal when double-clicked."""
     print(f"\n  Setting up Ride On Clicker...\n")
 
-    # 1. Copy script to ~/.zwift-rideon/
     INSTALL_DIR.mkdir(parents=True, exist_ok=True)
-    source = Path(__file__).parent / SCRIPT
-    dest = INSTALL_DIR / SCRIPT
-    if source.exists():
-        shutil.copy2(source, dest)
-        print(f"  ✅ Script installed to {dest}")
+    source_dir = Path(__file__).parent
+
+    # Copy script
+    script_src = source_dir / SCRIPT
+    script_dst = INSTALL_DIR / SCRIPT
+    if script_src.exists():
+        shutil.copy2(script_src, script_dst)
+        print(f"  ✅ Script → {script_dst}")
     else:
-        print(f"  ❌ {SCRIPT} not found next to this file.")
-        print(f"     Put both files in the same folder and try again.")
+        print(f"  ❌ {SCRIPT} not found. Put it next to this file.")
         return
 
-    # 2. Create a .command file on Desktop
-    #    macOS natively opens .command files in Terminal.app
+    # Copy template
+    tmpl_src = source_dir / TEMPLATE
+    tmpl_dst = INSTALL_DIR / TEMPLATE
+    if tmpl_src.exists():
+        shutil.copy2(tmpl_src, tmpl_dst)
+        print(f"  ✅ Template → {tmpl_dst}")
+    else:
+        print(f"  ❌ {TEMPLATE} not found. Put it next to this file.")
+        return
+
+    # Create .command shortcut on Desktop
     cmd_file = DESKTOP / f"{APP_NAME}.command"
     cmd_file.write_text(f"""#!/bin/bash
 clear
@@ -46,13 +60,11 @@ echo "  ========================================"
 echo "  Close this window to stop."
 echo ""
 cd "{INSTALL_DIR}"
-"{PYTHON}" "{dest}"
+"{PYTHON}" "{script_dst}"
 """)
-
-    # Make it executable
     cmd_file.chmod(cmd_file.stat().st_mode | stat.S_IEXEC)
 
-    print(f"  ✅ Shortcut created: {cmd_file}")
+    print(f"  ✅ Shortcut → {cmd_file}")
     print(f"\n  {'='*50}")
     print(f"  Done! Double-click '{APP_NAME}' on your Desktop.")
     print(f"  It opens a Terminal window — close it to stop.")
